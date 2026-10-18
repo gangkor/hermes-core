@@ -25,12 +25,25 @@ def call_gemini(system_role, prompt):
 
 def send_telegram(message):
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
-        print("Telegram keys missing. Output:\n", message)
+        print("Telegram keys missing. Output:
+", message)
         return
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     payload = {"chat_id": TG_CHAT_ID, "text": message[:4000]}
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
-    urllib.request.urlopen(req)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            print("Telegram sent successfully:", resp.status)
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")
+        print(f"Telegram HTTPError {e.code}: {err_body}")
+        print("Notice: Chat ID not found or user hasn't pressed /start with the bot yet.")
+        print("Report content:
+", message)
+    except Exception as e:
+        print(f"Telegram send error: {e}")
+        print("Report content:
+", message)
 
 def run_hermes_autonomous_cycle():
     print("[1] Scout: Пошук Web3/AI можливостей...")
