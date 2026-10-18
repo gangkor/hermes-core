@@ -13,9 +13,7 @@ def call_gemini(system_role, prompt):
         "contents": [
             {
                 "parts": [
-                    {"text": f"SYSTEM ROLE: {system_role}
-
-TASK: {prompt}"}
+                    {"text": f"SYSTEM ROLE: {system_role}\n\nTASK: {prompt}"}
                 ]
             }
         ]
@@ -27,11 +25,10 @@ TASK: {prompt}"}
 
 def send_telegram(message):
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
-        print("Telegram keys missing. Output:
-" + message)
+        print("Telegram keys missing. Output:\n" + str(message))
         return
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": TG_CHAT_ID, "text": message[:4000]}
+    payload = {"chat_id": TG_CHAT_ID, "text": str(message)[:4000]}
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req) as resp:
@@ -39,12 +36,10 @@ def send_telegram(message):
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="replace")
         print(f"Telegram HTTPError {e.code}: {err_body}")
-        print("Report content:
-" + message)
+        print("Report content:\n" + str(message))
     except Exception as e:
         print(f"Telegram send error: {e}")
-        print("Report content:
-" + message)
+        print("Report content:\n" + str(message))
 
 def run_hermes_autonomous_cycle():
     print("[1] Scout: Пошук Web3/AI можливостей...")
@@ -53,38 +48,20 @@ def run_hermes_autonomous_cycle():
 
     print("[2] Worker: Розробка рішення...")
     worker_role = "Ти Senior Web3 Engineer. Напиши лаконічне технічне рішення або архітектурний план."
-    draft = call_gemini(worker_role, f"Ідея: {task}
-Створи технічний опис або прототип.")
+    draft = call_gemini(worker_role, f"Ідея: {task}\nСтвори технічний опис або прототип.")
 
     print("[3] Critic: Аудит та перевірка слабких місць...")
     critic_role = "Ти суворий QA-лідер та аудитор. Вкажи на 2 критичні недоліки рішення."
-    critique = call_gemini(critic_role, f"Рішення:
-{draft}
-Зроби короткий аудит.")
+    critique = call_gemini(critic_role, f"Рішення:\n{draft}\nЗроби короткий аудит.")
 
     print("[4] Worker: Фінальний варіант...")
-    final_solution = call_gemini(worker_role, f"Ось початкове рішення:
-{draft}
-
-Ось зауваження аудитора:
-{critique}
-
-Сформуй фінальне, виправлене резюме.")
+    final_solution = call_gemini(worker_role, f"Ось початкове рішення:\n{draft}\n\nОсь зауваження аудитора:\n{critique}\n\nСформуй фінальне, виправлене резюме.")
 
     report = (
-        "🚀 *Hermes Autonomous Agent: Звіт циклу*
-
-"
-        f"🎯 *Напрямок:*
-{task}
-
-"
-        f"🔍 *Аудит (Critic):*
-{critique}
-
-"
-        f"✅ *Фінальний вердикт:*
-{final_solution}"
+        "🚀 *Hermes Autonomous Agent: Звіт циклу*\n\n"
+        f"🎯 *Напрямок:*\n{task}\n\n"
+        f"🔍 *Аудит (Critic):*\n{critique}\n\n"
+        f"✅ *Фінальний вердикт:*\n{final_solution}"
     )
     send_telegram(report)
     print("Цикл успішно завершено.")
