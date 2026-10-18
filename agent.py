@@ -10,7 +10,6 @@ TG_CHAT_ID = os.environ.get("TG_CHAT_ID")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 
 def fetch_live_github_bounties():
-    """Збирає свіжі відкриті завдання та баунті з Solana/Web3 на GitHub."""
     queries = [
         "solana+label:bounty+state:open",
         "solana+good-first-issue+state:open"
@@ -29,13 +28,13 @@ def fetch_live_github_bounties():
                 for item in data.get("items", []):
                     title = item.get("title", "").strip()
                     html_url = item.get("html_url", "")
-                    body = (item.get("body") or "")[:300].replace("\n", " ").strip()
-                    collected.append(f"- [{title}]({html_url}): {body}")
+                    body = (item.get("body") or "")[:250].replace("\n", " ").strip()
+                    collected.append(f"- {title} ({html_url}): {body}")
         except Exception as e:
             print(f"Помилка парсингу GitHub ({q}): {e}")
         time.sleep(1)
 
-    return "\n".join(collected[:4]) if collected else "Реальні баунті тимчасово недоступні (ліміт API)."
+    return "\n".join(collected[:4]) if collected else "Реальні баунті тимчасово недоступні."
 
 def call_gemini(system_role, prompt, max_retries=3):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
@@ -71,28 +70,33 @@ def send_telegram(message):
         print("Telegram keys missing. Output:\n" + str(message))
         return
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TG_CHAT_ID,
-        "text": str(message)[:4000],
-        "parse_mode": "Markdown",
-        "disable_web_page_preview": True
-    }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req) as resp:
-            print("Telegram sent successfully:", resp.status)
-    except urllib.error.HTTPError as e:
-        err_body = e.read().decode("utf-8", errors="replace")
-        print(f"Telegram HTTPError {e.code}: {err_body}")
-        # Спроба відправити без Markdown, якщо розмітка пошкоджена
-        payload.pop("parse_mode", None)
-        retry_req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
+
+    # Розбиваємо на частини по 3900 символів, щоб гарантовано проходило ліміти
+    chunks = []
+    text = str(message)
+    while text:
+        if len(text) <= 3900:
+            chunks.append(text)
+            break
+        split_idx = text.rfind("\n", 0, 3900)
+        if split_idx == -1:
+            split_idx = 3900
+        chunks.append(text[:split_idx])
+        text = text[split_idx:].lstrip()
+
+    for idx, chunk in enumerate(chunks, 1):
+        payload = {
+            "chat_id": TG_CHAT_ID,
+            "text": chunk,
+            "disable_web_page_preview": True
+        }
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
         try:
-            urllib.request.urlopen(retry_req)
-        except Exception:
-            pass
-    except Exception as e:
-        print(f"Telegram send error: {e}")
+            with urllib.request.urlopen(req) as resp:
+                print(f"Telegram chunk {idx}/{len(chunks)} sent: {resp.status}")
+        except Exception as e:
+            print(f"Telegram chunk {idx} failed: {e}")
+        time.sleep(0.5)
 
 def run_hermes_autonomous_cycle():
     print("[0] Ingest: Отримання живих даних із GitHub...")
@@ -103,7 +107,7 @@ def run_hermes_autonomous_cycle():
     task_prompt = (
         f"Ось актуальні відкриті завдання/баунті з GitHub за сьогодні:\n{live_context}\n\n"
         "Обери 1 найперспективніше конкретне завдання з переліку (або сформуй точне мікро-рішення під ці проблеми). "
-        "Поясни: що це, посилання на задачу, чому воно перспективне і скільки можна заробити/виграти."
+        "Поясни: що це, пряме посилання на задачу, чому воно перспективне і орієнтовна винагорода/цінність."
     )
     task = call_gemini("Ти провідний аналітик Web3 та скаут GitHub баунті.", task_prompt)
     time.sleep(2)
@@ -122,10 +126,10 @@ def run_hermes_autonomous_cycle():
     final_solution = call_gemini(worker_role, f"Ось початкове рішення:\n{draft}\n\nОсь зауваження аудитора:\n{critique}\n\nСформуй фінальне, виправлене резюме рішення з чіткими інструкціями.")
 
     report = (
-        "🚀 *Hermes Scout 2.0: Живі баунті Web3*\n\n"
-        f"🎯 *Обране реальне завдання:*\n{task}\n\n"
-        f"🔍 *Аудит (Critic):*\n{critique}\n\n"
-        f"✅ *Готове рішення (Worker):*\n{final_solution}"
+        "🚀 Hermes Scout 2.0: Живі баунті Web3\n\n"
+        f"🎯 Обране реальне завдання:\n{task}\n\n"
+        f"🔍 Аудит (Critic):\n{critique}\n\n"
+        f"✅ Готове рішення (Worker):\n{final_solution}"
     )
     send_telegram(report)
     print("Цикл 2.0 успішно завершено.")
