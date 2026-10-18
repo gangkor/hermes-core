@@ -84,28 +84,31 @@ def fetch_top_unclaimed_bounties():
 
     return candidates
 
-def call_gemini(system_role, prompt, max_retries=5):
+def call_gemini(system_role, prompt, max_retries=6):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
     headers = {"Content-Type": "application/json"}
     payload = {
         "contents": [{"parts": [{"text": f"SYSTEM ROLE: {system_role}\n\nTASK: {prompt}"}]}]
     }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+    encoded = json.dumps(payload).encode("utf-8")
     for attempt in range(1, max_retries + 1):
+        req = urllib.request.Request(url, data=encoded, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 return result["candidates"][0]["content"]["parts"][0]["text"]
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
-                wait_time = attempt * 12 # Збільшений бекофф при 429
-                print(f"[Gemini 429/503] Очікування {wait_time}с перед спробою {attempt + 1}...")
+                wait_time = attempt * 20
+                print(f"[Gemini {e.code}] Очікування {wait_time}с перед спробою {attempt + 1}...")
                 time.sleep(wait_time)
                 continue
+            err_body = e.read().decode("utf-8", errors="replace")
+            print(f"[Gemini Critical Error {e.code}]: {err_body}")
             raise
         except Exception as e:
             if attempt < max_retries:
-                time.sleep(attempt * 8)
+                time.sleep(attempt * 15)
                 continue
             raise
 
@@ -133,7 +136,7 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     if "error" in fork_res:
         return {"error": f"Fork failed: {fork_res['message']}"}
 
-    time.sleep(5)
+    time.sleep(6)
 
     repo_name = target_repo.split("/")[-1]
     repo_info = gh_api_request(f"repos/{target_repo}")
@@ -171,7 +174,7 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
         data=commit_payload
     )
 
-    time.sleep(3)
+    time.sleep(4)
 
     pr_title = f"fix: resolve issue #{issue_num} - automated verification"
     pr_body = (
@@ -213,7 +216,7 @@ def run_hermes_autonomous_cycle():
         "Сформуй: 1) Короткий опис виправлення (2-3 речення); 2) Конкретний фікс або код патчу."
     )
     solution = call_gemini("Ти Senior Systems/Web3 Engineer.", prompt)
-    time.sleep(4)
+    time.sleep(3)
 
     print("[3] Action: Автоматичний Fork, Commit та Pull Request...")
     pr_result = create_fork_and_pr(target["repo"], target["number"], solution, solution[:500])
