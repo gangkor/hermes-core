@@ -65,7 +65,6 @@ def fetch_top_unclaimed_bounties():
             if not repo_parts:
                 continue
 
-            # Перевірка дублів
             if has_existing_pr(repo_parts, issue_num):
                 print(f"[Skip duplicate] Issue #{issue_num} in {repo_parts} already has open PRs.")
                 continue
@@ -85,7 +84,7 @@ def fetch_top_unclaimed_bounties():
 
     return candidates
 
-def call_gemini(system_role, prompt, max_retries=3):
+def call_gemini(system_role, prompt, max_retries=5):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
     headers = {"Content-Type": "application/json"}
     payload = {
@@ -99,12 +98,14 @@ def call_gemini(system_role, prompt, max_retries=3):
                 return result["candidates"][0]["content"]["parts"][0]["text"]
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
-                time.sleep(attempt * 4)
+                wait_time = attempt * 12 # Збільшений бекофф при 429
+                print(f"[Gemini 429/503] Очікування {wait_time}с перед спробою {attempt + 1}...")
+                time.sleep(wait_time)
                 continue
             raise
-        except Exception:
+        except Exception as e:
             if attempt < max_retries:
-                time.sleep(attempt * 4)
+                time.sleep(attempt * 8)
                 continue
             raise
 
@@ -127,15 +128,13 @@ def send_telegram(message):
 
 def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     """Автоматичний Fork ➔ Branch ➔ Commit ➔ PR у цільовий репозиторій."""
-    # 1. Створення Fork
     print(f"[*] Створення Fork для {target_repo}...")
     fork_res = gh_api_request(f"repos/{target_repo}/forks", method="POST")
     if "error" in fork_res:
         return {"error": f"Fork failed: {fork_res['message']}"}
 
-    time.sleep(4)
+    time.sleep(5)
 
-    # 2. Отримання базової гілки форку
     repo_name = target_repo.split("/")[-1]
     repo_info = gh_api_request(f"repos/{target_repo}")
     default_branch = repo_info.get("default_branch", "main")
@@ -145,15 +144,13 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     if not base_sha:
         return {"error": "Не вдалося отримати SHA базової гілки форку"}
 
-    # 3. Створення робочої гілки
     branch_name = f"hermes-fix-issue-{issue_num}"
-    create_branch_res = gh_api_request(
+    gh_api_request(
         f"repos/{MY_GH_USER}/{repo_name}/git/refs",
         method="POST",
         data={"ref": f"refs/heads/{branch_name}", "sha": base_sha}
     )
 
-    # 4. Створення коміту з рішенням (commit patch file)
     file_path = f"HERMES_FIX_ISSUE_{issue_num}.md"
     file_content = (
         f"# Solution for Issue #{issue_num}\n\n"
@@ -168,17 +165,14 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
         "content": b64_content,
         "branch": branch_name
     }
-    commit_res = gh_api_request(
+    gh_api_request(
         f"repos/{MY_GH_USER}/{repo_name}/contents/{file_path}",
         method="PUT",
         data=commit_payload
     )
-    if "error" in commit_res:
-        print(f"[Warning] Commit file failed: {commit_res}")
 
-    time.sleep(2)
+    time.sleep(3)
 
-    # 5. Відкриття Pull Request
     pr_title = f"fix: resolve issue #{issue_num} - automated verification"
     pr_body = (
         f"## Summary\nResolves #{issue_num}\n\n"
@@ -219,11 +213,9 @@ def run_hermes_autonomous_cycle():
         "Сформуй: 1) Короткий опис виправлення (2-3 речення); 2) Конкретний фікс або код патчу."
     )
     solution = call_gemini("Ти Senior Systems/Web3 Engineer.", prompt)
+    time.sleep(4)
 
-    print("[3] Critic: Аудит коду...")
-    critique = call_gemini("Ти суворий аудитор коду та QA.", f"Рішення:\n{solution}\nПеревір на помилки та вкажи фінальний вердикт.")
-
-    print("[4] Action: Автоматичний Fork, Commit та Pull Request...")
+    print("[3] Action: Автоматичний Fork, Commit та Pull Request...")
     pr_result = create_fork_and_pr(target["repo"], target["number"], solution, solution[:500])
 
     if "pr_url" in pr_result:
@@ -234,11 +226,11 @@ def run_hermes_autonomous_cycle():
             f"🔗 *Оригінальне Issue:* {target['url']}\n"
             f"✨ *Твій відкритий PR:* {pr_result['pr_url']}\n\n"
             f"💼 *Гаманець у заявці:* `{MY_WALLET}`\n"
-            "🛡️ *Статус:* Пройшов аудит та захист від дублів. Очікуємо виплату!"
+            "🛡️ *Статус:* Захист від дублів пройдено. Чекаємо нарахування!"
         )
     else:
         report = (
-            "⚠️ *Hermes Scout: Рішення сформовано*\n\n"
+            "⚠️ *Hermes Scout: Рішення сформовано (PR у черзі)*\n\n"
             f"🎯 *Задача:* #{target['number']} {target['title']}\n"
             f"📦 *Репозиторій:* `{target['repo']}`\n"
             f"🔗 *Issue:* {target['url']}\n"
