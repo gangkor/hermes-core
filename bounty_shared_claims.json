@@ -1,42 +1,125 @@
 {
+  "updated_at": "2026-10-19T21:40:00Z",
+  "active_open_prs": {
+    "gangkor": [
+      {
+        "repo": "MyZubster-Ecosystem/myzubster",
+        "pr": 1636,
+        "url": "https://github.com/MyZubster-Ecosystem/myzubster/pull/1636",
+        "stack": "Python / Backend"
+      },
+      {
+        "repo": "ZackaryShen/ColorYourModel",
+        "pr": 18,
+        "url": "https://github.com/ZackaryShen/ColorYourModel/pull/18",
+        "stack": "Python / Backend"
+      },
+      {
+        "repo": "zhangjiayang6835-cyber/bounty-plaza",
+        "pr": 3096,
+        "url": "https://github.com/zhangjiayang6835-cyber/bounty-plaza/pull/3096",
+        "stack": "Python / Backend"
+      },
+      {
+        "repo": "relayhop/sn-monetization-runtime",
+        "pr": 1307,
+        "url": "https://github.com/relayhop/sn-monetization-runtime/pull/1307",
+        "stack": "Python / Backend"
+      }
+    ],
+    "Danko145": [
+      {
+        "repo": "oll4com/spaceapp",
+        "pr": 214,
+        "url": "https://github.com/oll4com/spaceapp/pull/214",
+        "stack": "TypeScript / UI"
+      },
+      {
+        "repo": "sharmiaalono/go-github",
+        "pr": 39,
+        "url": "https://github.com/sharmiaalono/go-github/pull/39",
+        "stack": "Frontend / JS"
+      },
+      {
+        "repo": "Mantitup-Org/vista",
+        "pr": 208,
+        "url": "https://github.com/Mantitup-Org/vista/pull/208",
+        "stack": "TypeScript / React / UI"
+      }
+    ],
+    "danko5443-rgb": [
+      {
+        "repo": "zhangjiayang6835-cyber/ai-research",
+        "pr": 1548,
+        "url": "https://github.com/zhangjiayang6835-cyber/ai-research/pull/1548",
+        "stack": "AI / LLM / Scrapers"
+      },
+      {
+        "repo": "Senthemodder/aquarium-of-gullibles",
+        "pr": 58,
+        "url": "https://github.com/Senthemodder/aquarium-of-gullibles/pull/58",
+        "stack": "Data Science / Research"
+      }
+    ],
+    "danopef-eng": [
+      {
+        "repo": "nymrel/nymrel-swarm-studio",
+        "pr": 29,
+        "url": "https://github.com/nymrel/nymrel-swarm-studio/pull/29",
+        "stack": "Systems / Crypto"
+      },
+      {
+        "repo": "paraloom-labs/paraloom-prover-wasm",
+        "pr": 11,
+        "url": "https://github.com/paraloom-labs/paraloom-prover-wasm/pull/11",
+        "stack": "Rust / WASM / Crypto"
+      },
+      {
+        "repo": "paraloom-labs/paraloom-core",
+        "pr": 1121,
+        "url": "https://github.com/paraloom-labs/paraloom-core/pull/1121",
+        "stack": "Rust / Systems / Crypto"
+      }
+    ]
+  },
   "gangkor_claimed_repos": [
-    "Neziahtech/streampay",
-    "zhangjiayang6835-cyber/bounty-plaza",
-    "ZackaryShen/ColorYourModel",
     "MyZubster-Ecosystem/myzubster",
-    "vectorcmdr/NMSE",
-    "Ikalus1988/MisakaNet"
+    "ZackaryShen/ColorYourModel",
+    "zhangjiayang6835-cyber/bounty-plaza",
+    "relayhop/sn-monetization-runtime"
   ],
   "gangkor_claimed_issues": [
-    "https://github.com/Neziahtech/streampay/pull/296",
+    "https://github.com/MyZubster-Ecosystem/myzubster/pull/1636",
+    "https://github.com/ZackaryShen/ColorYourModel/pull/18",
     "https://github.com/zhangjiayang6835-cyber/bounty-plaza/pull/3096",
-    "https://github.com/ZackaryShen/ColorYourModel/issues/17",
-    "https://github.com/MyZubster-Ecosystem/myzubster/issues/1516",
-    "https://github.com/vectorcmdr/NMSE/issues/140",
-    "https://github.com/Ikalus1988/MisakaNet/issues/2875"
+    "https://github.com/relayhop/sn-monetization-runtime/pull/1307"
   ],
   "danko145_claimed_repos": [
-    "Mantitup-Org/vista",
-    "sharmiaalono/go-github"
+    "oll4com/spaceapp",
+    "sharmiaalono/go-github",
+    "Mantitup-Org/vista"
   ],
   "danko145_claimed_issues": [
-    "https://github.com/Mantitup-Org/vista/issues/62",
-    "https://github.com/sharmiaalono/go-github/issues/5"
+    "https://github.com/oll4com/spaceapp/pull/214",
+    "https://github.com/sharmiaalono/go-github/pull/39",
+    "https://github.com/Mantitup-Org/vista/pull/208"
   ],
   "danko5443_claimed_repos": [
-    "Senthemodder/aquarium-of-gullibles",
-    "zhangjiayang6835-cyber/ai-research"
+    "zhangjiayang6835-cyber/ai-research",
+    "Senthemodder/aquarium-of-gullibles"
   ],
   "danko5443_claimed_issues": [
-    "https://github.com/Senthemodder/aquarium-of-gullibles/issues/5",
-    "https://github.com/zhangjiayang6835-cyber/ai-research/issues/1503"
+    "https://github.com/zhangjiayang6835-cyber/ai-research/pull/1548",
+    "https://github.com/Senthemodder/aquarium-of-gullibles/pull/58"
   ],
   "danopef_claimed_repos": [
-    "paraloom-labs/paraloom-core",
-    "paraloom-labs/paraloom-prover-wasm"
+    "nymrel/nymrel-swarm-studio",
+    "paraloom-labs/paraloom-prover-wasm",
+    "paraloom-labs/paraloom-core"
   ],
   "danopef_claimed_issues": [
-    "https://github.com/paraloom-labs/paraloom-core/issues/1021",
-    "https://github.com/paraloom-labs/paraloom-prover-wasm/issues/9"
+    "https://github.com/nymrel/nymrel-swarm-studio/pull/29",
+    "https://github.com/paraloom-labs/paraloom-prover-wasm/pull/11",
+    "https://github.com/paraloom-labs/paraloom-core/pull/1121"
   ]
 }
