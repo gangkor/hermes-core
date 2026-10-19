@@ -4,6 +4,7 @@ import time
 import base64
 import urllib.request
 import urllib.error
+from datetime import datetime, timezone
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN")
@@ -42,6 +43,170 @@ def gh_api_request(endpoint, method="GET", data=None):
     except Exception as e:
         print(f"[GitHub API Exception] {method} {url} -> {e}")
         return {"error": str(e)}
+
+def send_telegram(message):
+    if not TG_BOT_TOKEN or not TG_CHAT_ID:
+        print("Telegram keys missing. Output:\n" + str(message))
+        return
+    url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TG_CHAT_ID,
+        "text": str(message)[:4000],
+        "disable_web_page_preview": True
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req) as resp:
+            print(f"Telegram sent: {resp.status}")
+    except Exception as e:
+        print(f"Telegram error: {e}")
+
+def call_gemini(system_role, prompt, max_retries=6):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "contents": [{"parts": [{"text": f"SYSTEM ROLE: {system_role}\n\nTASK: {prompt}"}]}]
+    }
+    encoded = json.dumps(payload).encode("utf-8")
+    for attempt in range(1, max_retries + 1):
+        req = urllib.request.Request(url, data=encoded, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
+                wait_time = attempt * 20
+                print(f"[Gemini {e.code}] Очікування {wait_time}с перед спробою {attempt + 1}...")
+                time.sleep(wait_time)
+                continue
+            err_body = e.read().decode("utf-8", errors="replace")
+            print(f"[Gemini Critical Error {e.code}]: {err_body}")
+            raise
+        except Exception:
+            if attempt < max_retries:
+                time.sleep(attempt * 15)
+                continue
+            raise
+
+# ==============================================================================
+# МОДУЛЬ 1: PR LISTENER (Автономний моніторинг коментарів, рев'ю та мерджів)
+# ==============================================================================
+
+def run_pr_listener():
+    """
+    Сканує всі відкриті PR від імені gangkor:
+    - Якщо рев'юер/мейнтенер залишив коментар/зауваження -> Gemini генерує відповідь і публікує в PR.
+    - Якщо PR змерджено -> надсилає фінансове сповіщення про успіх.
+    """
+    print("\n[PR Listener] 📡 Сканування активних Pull Requests...")
+    open_prs_res = gh_api_request(f"search/issues?q=author:{MY_GH_USER}+type:pr+state:open")
+    open_prs = open_prs_res.get("items", [])
+    print(f"[PR Listener] Знайдено відкритих PR: {len(open_prs)}")
+
+    for pr in open_prs:
+        pr_number = pr.get("number")
+        pr_title = pr.get("title", "")
+        pr_url = pr.get("html_url", "")
+        repo_url = pr.get("repository_url", "")
+        repo_full_name = repo_url.split("/repos/")[-1] if "/repos/" in repo_url else ""
+        if not repo_full_name:
+            continue
+
+        print(f"[PR Listener] Перевірка {repo_full_name} #{pr_number}: '{pr_title}'")
+
+        # 1. Отримуємо всі коментарі до PR (issues comments + pull review comments)
+        issue_comments = gh_api_request(f"repos/{repo_full_name}/issues/{pr_number}/comments")
+        if isinstance(issue_comments, dict) and "error" in issue_comments:
+            issue_comments = []
+
+        review_comments = gh_api_request(f"repos/{repo_full_name}/pulls/{pr_number}/comments")
+        if isinstance(review_comments, dict) and "error" in review_comments:
+            review_comments = []
+
+        # Об'єднуємо всі коментарі
+        all_comments = []
+        for c in (issue_comments + review_comments):
+            user_login = c.get("user", {}).get("login", "")
+            user_type = c.get("user", {}).get("type", "")
+            # Пропускаємо ботів та автоматичні сервіси
+            if user_type == "Bot" or "[bot]" in user_login.lower():
+                continue
+            all_comments.append({
+                "id": c.get("id"),
+                "user": user_login,
+                "body": c.get("body", ""),
+                "created_at": c.get("created_at", "")
+            })
+
+        if not all_comments:
+            print(f"[PR Listener] У PR #{pr_number} немає коментарів від людей.")
+            continue
+
+        # Сортуємо коментарі за часом створення
+        all_comments.sort(key=lambda x: x["created_at"])
+        last_comment = all_comments[-1]
+
+        # Якщо останній коментар залишено стороннім користувачем/мейнтенером (не нами):
+        if last_comment["user"].lower() != MY_GH_USER.lower():
+            reviewer = last_comment["user"]
+            comment_text = last_comment["body"]
+            print(f"[PR Listener] ⚡ Виявлено новий коментар від @{reviewer}: {comment_text[:80]}...")
+
+            # Викликаємо внутрішній Gemini для формування автономної відповіді
+            system_role = (
+                "You are an autonomous Open-Source & Web3 AI Engineer representing 'gangkor'. "
+                "You submitted a high-quality pull request. Maintain professional, polite, "
+                "clear, and technically accurate tone. Address all feedback constructively."
+            )
+            task_prompt = (
+                f"Repository: {repo_full_name}\n"
+                f"Pull Request #{pr_number}: '{pr_title}'\n"
+                f"Reviewer/Maintainer @{reviewer} wrote:\n\"{comment_text}\"\n\n"
+                "Provide a direct, concise and helpful response in English. "
+                "Clarify the solution or outline the next steps clearly without filler."
+            )
+
+            try:
+                reply_text = call_gemini(system_role, task_prompt)
+                # Додаємо підпис
+                full_reply = f"{reply_text}\n\n---\n*Autonomous reply by Hermes Agent (@{MY_GH_USER})*"
+
+                # Публікуємо відповідь у PR
+                post_res = gh_api_request(
+                    f"repos/{repo_full_name}/issues/{pr_number}/comments",
+                    method="POST",
+                    data={"body": full_reply}
+                )
+
+                if "id" in post_res:
+                    print(f"[PR Listener] ✅ Відповідь успішно опубліковано в PR #{pr_number}!")
+                    tg_msg = (
+                        "💬 *Hermes PR Listener: Автономна відповідь на рев'ю!* 🤖\n\n"
+                        f"📦 *Репозиторій:* `{repo_full_name}`\n"
+                        f"🎯 *PR:* #{pr_number} {pr_title}\n"
+                        f"👤 *Рев'юер:* @{reviewer}\n"
+                        f"📝 *Зауваження:* _{comment_text[:200]}_\n\n"
+                        f"⚡ *Відповідь Hermes:* {reply_text[:280]}...\n\n"
+                        f"🔗 [Переглянути PR на GitHub]({pr_url})"
+                    )
+                    send_telegram(tg_msg)
+                else:
+                    print(f"[PR Listener] ⚠️ Помилка публікації коментаря: {post_res}")
+            except Exception as e:
+                print(f"[PR Listener] Помилка обробки коментаря через Gemini: {e}")
+
+    # 2. Перевірка змерджених PR для фінансового звіту
+    merged_prs_res = gh_api_request(f"search/issues?q=author:{MY_GH_USER}+type:pr+is:merged&sort=updated&order=desc&per_page=3")
+    merged_prs = merged_prs_res.get("items", [])
+    for mpr in merged_prs:
+        updated_at = mpr.get("updated_at", "")
+        # Можна відстежувати свіжі мерджі
+        print(f"[PR Listener] Змерджений PR: #{mpr.get('number')} {mpr.get('title')} ({mpr.get('html_url')})")
+
+# ==============================================================================
+# МОДУЛЬ 2: INGEST, FILTER, SCOUT, FORK & PR
+# ==============================================================================
 
 def has_existing_pr(repo_full_name, issue_number):
     """Захист від дублів: перевіряє, чи вже є відкритий PR під це issue."""
@@ -82,7 +247,7 @@ def is_valid_bounty_target(repo_parts, title, body, user_data):
         return False
 
     stars = repo_meta["stars"]
-    if stars < 5: # Поріг для справжніх проєктів
+    if stars < 5:
         print(f"[Filter] Відхилено: замало зірок ({stars} < 5) у {repo_parts}")
         return False
 
@@ -111,11 +276,9 @@ def fetch_top_unclaimed_bounties():
             if not repo_parts:
                 continue
 
-            # Фільтр ботів, мінус-слів і зірок
             if not is_valid_bounty_target(repo_parts, title, body, user_data):
                 continue
 
-            # Захист від дублів
             if has_existing_pr(repo_parts, issue_num):
                 print(f"[Skip duplicate] Issue #{issue_num} in {repo_parts} already has open PRs.")
                 continue
@@ -134,51 +297,6 @@ def fetch_top_unclaimed_bounties():
         time.sleep(1)
 
     return candidates
-
-def call_gemini(system_role, prompt, max_retries=6):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "contents": [{"parts": [{"text": f"SYSTEM ROLE: {system_role}\n\nTASK: {prompt}"}]}]
-    }
-    encoded = json.dumps(payload).encode("utf-8")
-    for attempt in range(1, max_retries + 1):
-        req = urllib.request.Request(url, data=encoded, headers=headers)
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                return result["candidates"][0]["content"]["parts"][0]["text"]
-        except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 502, 503, 504) and attempt < max_retries:
-                wait_time = attempt * 20
-                print(f"[Gemini {e.code}] Очікування {wait_time}с перед спробою {attempt + 1}...")
-                time.sleep(wait_time)
-                continue
-            err_body = e.read().decode("utf-8", errors="replace")
-            print(f"[Gemini Critical Error {e.code}]: {err_body}")
-            raise
-        except Exception:
-            if attempt < max_retries:
-                time.sleep(attempt * 15)
-                continue
-            raise
-
-def send_telegram(message):
-    if not TG_BOT_TOKEN or not TG_CHAT_ID:
-        print("Telegram keys missing. Output:\n" + str(message))
-        return
-    url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TG_CHAT_ID,
-        "text": str(message)[:4000],
-        "disable_web_page_preview": True
-    }
-    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req) as resp:
-            print(f"Telegram sent: {resp.status}")
-    except Exception as e:
-        print(f"Telegram error: {e}")
 
 def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     """Автоматичний Fork ➔ Branch ➔ Commit ➔ PR у цільовий репозиторій."""
@@ -250,17 +368,28 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     return {"pr_url": pr_res.get("html_url"), "pr_number": pr_res.get("number")}
 
 def run_hermes_autonomous_cycle():
-    print("[1] Ingest & Filter: Пошук перевірених баунті (Social Proof + Мінус-слова)...")
+    print("=" * 60)
+    print("🚀 HERMES AUTONOMOUS AGENT: ЗАПУСК ПОВНОГО ЦИКЛУ")
+    print("=" * 60)
+
+    # Крок 1: Робота PR Listener (перевірка існуючих PR, відповідей та статусів)
+    try:
+        run_pr_listener()
+    except Exception as e:
+        print(f"[PR Listener Exception]: {e}")
+
+    # Крок 2: Ingest & Filter (Пошук нових перевірених баунті)
+    print("\n[Bounty Hunter] Ingest & Filter: Пошук якісних баунті...")
     bounties = fetch_top_unclaimed_bounties()
     if not bounties:
-        print("Вільних якісних баунті без дублів не знайдено в цьому циклі.")
-        send_telegram("ℹ️ Hermes Scout: Усі знайдені задачі або зайняті, або не пройшли аудит якості/зірок. Моніторинг триває 24/7.")
+        print("[Bounty Hunter] Нових вільних задач, що пройшли фільтри, зараз немає.")
         return
 
     target = bounties[0]
-    print(f"Обрана перевірена ціль: #{target['number']} [{target['title']}] у {target['repo']}")
+    print(f"[Bounty Hunter] Обрана ціль: #{target['number']} [{target['title']}] у {target['repo']}")
 
-    print("[2] Scout & Worker: Аналіз та створення вирішення...")
+    # Крок 3: Scout & Worker (Генерація рішення через Gemini)
+    print("[Bounty Hunter] Scout & Worker: Формування коду та патчу через Gemini...")
     prompt = (
         f"Цільове issue: #{target['number']} '{target['title']}' у репозиторії '{target['repo']}'.\n"
         f"Опис проблеми: {target['body']}\n\n"
@@ -269,18 +398,19 @@ def run_hermes_autonomous_cycle():
     solution = call_gemini("Ти Senior Systems/Web3 Engineer.", prompt)
     time.sleep(3)
 
-    print("[3] Action: Автоматичний Fork, Commit та Pull Request...")
+    # Крок 4: Action (Fork, Branch, Commit, PR)
+    print("[Bounty Hunter] Action: Створення Fork, гілки, коміту та Pull Request...")
     pr_result = create_fork_and_pr(target["repo"], target["number"], solution, solution[:500])
 
     if "pr_url" in pr_result:
         report = (
-            "🎉 *Hermes Phase 3: Pull Request УСПІШНО ВІДКРИТО!* 🚀\n\n"
+            "🎉 *Hermes Phase 4: Pull Request УСПІШНО ВІДКРИТО!* 🚀\n\n"
             f"🎯 *Цільова задача:* #{target['number']} {target['title']}\n"
             f"📦 *Репозиторій:* `{target['repo']}`\n"
             f"🔗 *Оригінальне Issue:* {target['url']}\n"
             f"✨ *Твій відкритий PR:* {pr_result['pr_url']}\n\n"
             f"💼 *Гаманець у заявці:* `{MY_WALLET}`\n"
-            "🛡️ *Статус:* Перевірений проєкт (Social Proof + No Duplicate). Очікуємо виплату!"
+            "🛡️ *Статус:* Перевірений проєкт. PR Listener активовано для автономної підтримки діалогу!"
         )
     else:
         report = (
@@ -288,12 +418,12 @@ def run_hermes_autonomous_cycle():
             f"🎯 *Задача:* #{target['number']} {target['title']}\n"
             f"📦 *Репозиторій:* `{target['repo']}`\n"
             f"🔗 *Issue:* {target['url']}\n"
-            f"🔍 *Причина очікування:* {pr_result.get('error', 'Обмеження прав у цільовому репозиторії')}\n\n"
+            f"🔍 *Причина:* {pr_result.get('error', 'Обмеження доступу')}\n\n"
             f"💼 *Гаманець готовий до виплати:* `{MY_WALLET}`"
         )
 
     send_telegram(report)
-    print("Цикл завершено успішно.")
+    print("Автономний цикл завершено успішно.")
 
 if __name__ == "__main__":
     run_hermes_autonomous_cycle()
