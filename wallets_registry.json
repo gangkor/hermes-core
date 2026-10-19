@@ -1,0 +1,50 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-10-19T00:00:00Z",
+  "cluster": {
+    "gangkor": {
+      "worker_id": "Worker-1",
+      "payout_wallet_sol": "3EZnNP2kfmY161XyqnRWEFgtYw6jWFXHnimU5RMqA8g8",
+      "payout_wallet_evm": null,
+      "payout_email": "gangkor1991@gmail.com",
+      "solana_valid": true,
+      "platforms": [
+        "Algora.io",
+        "Opire.dev"
+      ]
+    },
+    "Danko145": {
+      "worker_id": "Worker-2",
+      "payout_wallet_sol": "ExBUfiba8Bmn8PADfKboF7MzpYjv3habpvDx45PdRfJR",
+      "payout_wallet_evm": null,
+      "payout_email": "dankof3256@gmail.com",
+      "solana_valid": true,
+      "platforms": [
+        "Algora.io",
+        "Opire.dev"
+      ]
+    },
+    "danko5443-rgb": {
+      "worker_id": "Worker-3",
+      "payout_wallet_sol": "kyZ21uBacqU95ctt7Z2pn8en98o4cGxmxGXoB2Vz1hi",
+      "payout_wallet_evm": null,
+      "payout_email": "danko5443@gmail.com",
+      "solana_valid": true,
+      "platforms": [
+        "Algora.io",
+        "Opire.dev"
+      ]
+    },
+    "danopef-eng": {
+      "worker_id": "Worker-4",
+      "payout_wallet_sol": "7Zv2Md3NLJtkLJ3HEPMESYWDEwLYW8cvNPqoH1bNj57K",
+      "payout_wallet_evm": null,
+      "payout_email": "danopef@gmail.com",
+      "solana_valid": true,
+      "platforms": [
+        "Algora.io",
+        "Opire.dev"
+      ]
+    }
+  }
+}
