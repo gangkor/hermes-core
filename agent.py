@@ -13,6 +13,12 @@ GH_PAT = os.environ.get("GH_PAT") or os.environ.get("GITHUB_TOKEN")
 MY_WALLET = "3EZnNP2kfmY161XyqnRWEFgtYw6jWFXHnimU5RMqA8g8"
 MY_GH_USER = "gangkor"
 
+# Мінус-слова для виключення службових логів і спаму
+STOP_WORDS = [
+    "radar", "aggregator", "crawler", "benchmark", "test-bot",
+    "digest", "dump", "mirror", "auto-generated", "automated"
+]
+
 def gh_api_request(endpoint, method="GET", data=None):
     url = f"https://api.github.com/{endpoint.lstrip('/')}"
     headers = {
@@ -44,27 +50,72 @@ def has_existing_pr(repo_full_name, issue_number):
     total = res.get("total_count", 0)
     return total > 0
 
+def get_repo_details(repo_full_name):
+    """Отримує метадані репозиторію (зірки, форк, опис)."""
+    res = gh_api_request(f"repos/{repo_full_name}")
+    if "error" in res:
+        return None
+    return {
+        "stars": res.get("stargazers_count", 0),
+        "is_fork": res.get("fork", False),
+        "description": res.get("description", "") or "",
+        "default_branch": res.get("default_branch", "main")
+    }
+
+def is_valid_bounty_target(repo_parts, title, body, user_data):
+    """Суворий фільтр якості: перевірка на живий проєкт і відсутність спаму/ботів."""
+    # 1. Перевірка на ботів
+    if user_data.get("type") == "Bot" or "[bot]" in user_data.get("login", "").lower():
+        print(f"[Filter] Відхилено: автор issue є ботом ({user_data.get('login')})")
+        return False
+
+    # 2. Перевірка мінус-слів у назві, описі та репозиторії
+    combined_text = f"{repo_parts} {title} {body}".lower()
+    for word in STOP_WORDS:
+        if word in combined_text:
+            print(f"[Filter] Відхилено за мінус-словом '{word}': {title}")
+            return False
+
+    # 3. Перевірка соціального доказу (Social Proof)
+    repo_meta = get_repo_details(repo_parts)
+    if not repo_meta:
+        return False
+
+    stars = repo_meta["stars"]
+    if stars < 5: # Поріг для справжніх проєктів
+        print(f"[Filter] Відхилено: замало зірок ({stars} < 5) у {repo_parts}")
+        return False
+
+    return True
+
 def fetch_top_unclaimed_bounties():
-    """Знаходить вільні баунті з Escrow (Algora, Polar або перевірені Solana bounties)."""
+    """Знаходить перевірені якісні баунті без дублів у реальних кодових репозиторіях."""
     queries = [
-        'algora+in:comments+is:issue+is:open',
-        '"bounty"+"reward"+is:issue+is:open+solana',
-        'label:bounty+is:issue+is:open+solana'
+        'label:bounty+is:issue+is:open+solana',
+        '"polar.sh"+"bounty"+is:issue+is:open',
+        'label:bounty+label:security+is:issue+is:open',
+        'label:bounty+is:issue+is:open'
     ]
     candidates = []
     for q in queries:
-        res = gh_api_request(f"search/issues?q={q}&sort=created&order=desc&per_page=5")
+        res = gh_api_request(f"search/issues?q={q}&sort=created&order=desc&per_page=10")
         for it in res.get("items", []):
             issue_num = it.get("number")
             html_url = it.get("html_url", "")
             title = it.get("title", "")
-            body = (it.get("body") or "")[:400].replace("\n", " ")
+            body = (it.get("body") or "")[:500].replace("\n", " ")
+            user_data = it.get("user", {})
 
             repo_url = it.get("repository_url", "")
             repo_parts = repo_url.split("/repos/")[-1] if "/repos/" in repo_url else ""
             if not repo_parts:
                 continue
 
+            # Фільтр ботів, мінус-слів і зірок
+            if not is_valid_bounty_target(repo_parts, title, body, user_data):
+                continue
+
+            # Захист від дублів
             if has_existing_pr(repo_parts, issue_num):
                 print(f"[Skip duplicate] Issue #{issue_num} in {repo_parts} already has open PRs.")
                 continue
@@ -76,9 +127,9 @@ def fetch_top_unclaimed_bounties():
                 "url": html_url,
                 "body": body
             })
-            if len(candidates) >= 3:
+            if len(candidates) >= 2:
                 break
-        if len(candidates) >= 3:
+        if len(candidates) >= 2:
             break
         time.sleep(1)
 
@@ -106,7 +157,7 @@ def call_gemini(system_role, prompt, max_retries=6):
             err_body = e.read().decode("utf-8", errors="replace")
             print(f"[Gemini Critical Error {e.code}]: {err_body}")
             raise
-        except Exception as e:
+        except Exception:
             if attempt < max_retries:
                 time.sleep(attempt * 15)
                 continue
@@ -134,7 +185,7 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     print(f"[*] Створення Fork для {target_repo}...")
     fork_res = gh_api_request(f"repos/{target_repo}/forks", method="POST")
     if "error" in fork_res:
-        return {"error": f"Fork failed: {fork_res['message']}"}
+        return {"error": f"Fork failed: {fork_res.get('message', '')}"}
 
     time.sleep(6)
 
@@ -194,20 +245,20 @@ def create_fork_and_pr(target_repo, issue_num, patch_code, solution_summary):
     }
     pr_res = gh_api_request(f"repos/{target_repo}/pulls", method="POST", data=pr_payload)
     if "error" in pr_res:
-        return {"error": f"PR creation failed: {pr_res['message']}"}
+        return {"error": f"PR creation failed: {pr_res.get('message', '')}"}
 
     return {"pr_url": pr_res.get("html_url"), "pr_number": pr_res.get("number")}
 
 def run_hermes_autonomous_cycle():
-    print("[1] Ingest & Filter: Пошук відкритих баунті без дублів...")
+    print("[1] Ingest & Filter: Пошук перевірених баунті (Social Proof + Мінус-слова)...")
     bounties = fetch_top_unclaimed_bounties()
     if not bounties:
-        print("Вільних баунті без дублів не знайдено в цьому циклі.")
-        send_telegram("ℹ️ Hermes Scout: Усі знайдені на цю хвилину баунті вже мають активні PR. Моніторинг триває 24/7.")
+        print("Вільних якісних баунті без дублів не знайдено в цьому циклі.")
+        send_telegram("ℹ️ Hermes Scout: Усі знайдені задачі або зайняті, або не пройшли аудит якості/зірок. Моніторинг триває 24/7.")
         return
 
     target = bounties[0]
-    print(f"Обрана ціль: #{target['number']} [{target['title']}] у {target['repo']}")
+    print(f"Обрана перевірена ціль: #{target['number']} [{target['title']}] у {target['repo']}")
 
     print("[2] Scout & Worker: Аналіз та створення вирішення...")
     prompt = (
@@ -229,7 +280,7 @@ def run_hermes_autonomous_cycle():
             f"🔗 *Оригінальне Issue:* {target['url']}\n"
             f"✨ *Твій відкритий PR:* {pr_result['pr_url']}\n\n"
             f"💼 *Гаманець у заявці:* `{MY_WALLET}`\n"
-            "🛡️ *Статус:* Захист від дублів пройдено. Чекаємо нарахування!"
+            "🛡️ *Статус:* Перевірений проєкт (Social Proof + No Duplicate). Очікуємо виплату!"
         )
     else:
         report = (
@@ -242,7 +293,7 @@ def run_hermes_autonomous_cycle():
         )
 
     send_telegram(report)
-    print("Цикл Фази 3 завершено успішно.")
+    print("Цикл завершено успішно.")
 
 if __name__ == "__main__":
     run_hermes_autonomous_cycle()
