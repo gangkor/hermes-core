@@ -154,16 +154,17 @@ def run_pr_listener():
             print(f"[PR Listener] ⚡ Виявлено новий коментар від @{reviewer}: {comment_text[:80]}...")
 
             # Викликаємо внутрішній Gemini для формування автономної відповіді
+            # STRICT RULE: Must respond exclusively in English for GitHub communications
             system_role = (
-                "You are an autonomous Open-Source & Web3 AI Engineer representing 'gangkor'. "
-                "You submitted a high-quality pull request. Maintain professional, polite, "
-                "clear, and technically accurate tone. Address all feedback constructively."
+                "You are an elite autonomous Open-Source & Web3 AI Engineer representing 'gangkor'. "
+                "CRITICAL RULE: Respond EXCLUSIVELY in professional, polite, technically sound English. "
+                "Never use Ukrainian or any non-English language on GitHub."
             )
             task_prompt = (
                 f"Repository: {repo_full_name}\n"
                 f"Pull Request #{pr_number}: '{pr_title}'\n"
                 f"Reviewer/Maintainer @{reviewer} wrote:\n\"{comment_text}\"\n\n"
-                "Provide a direct, concise and helpful response in English. "
+                "Provide a direct, concise and helpful response strictly in professional English. "
                 "Clarify the solution or outline the next steps clearly without filler."
             )
 
@@ -389,13 +390,22 @@ def run_hermes_autonomous_cycle():
     print(f"[Bounty Hunter] Обрана ціль: #{target['number']} [{target['title']}] у {target['repo']}")
 
     # Крок 3: Scout & Worker (Генерація рішення через Gemini)
+    # STRICT RULE: All GitHub outputs (commit messages, summaries, code, PR titles, descriptions) MUST be exclusively in English!
     print("[Bounty Hunter] Scout & Worker: Формування коду та патчу через Gemini...")
-    prompt = (
-        f"Цільове issue: #{target['number']} '{target['title']}' у репозиторії '{target['repo']}'.\n"
-        f"Опис проблеми: {target['body']}\n\n"
-        "Сформуй: 1) Короткий опис виправлення (2-3 речення); 2) Конкретний фікс або код патчу."
+    system_role = (
+        "You are an elite autonomous Open-Source & Web3 AI Engineer representing 'gangkor'. "
+        "CRITICAL RULE: You must respond EXCLUSIVELY in professional, clear, idiomatic technical English. "
+        "Never use any other language for summaries, comments, commits, or code documentation."
     )
-    solution = call_gemini("Ти Senior Systems/Web3 Engineer.", prompt)
+    prompt = (
+        f"Target issue: #{target['number']} '{target['title']}' in repository '{target['repo']}'.\n"
+        f"Issue description: {target['body']}\n\n"
+        "Requirements (STRICTLY IN TECHNICAL ENGLISH ONLY):\n"
+        "1) Provide a concise technical overview of the fix (2-3 sentences explaining root cause and resolution).\n"
+        "2) Provide clean, verified implementation code or patch resolving the issue.\n"
+        "DO NOT use Ukrainian or any non-English language anywhere in your response."
+    )
+    solution = call_gemini(system_role, prompt)
     time.sleep(3)
 
     # Крок 4: Action (Fork, Branch, Commit, PR)
