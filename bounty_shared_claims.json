@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-19T21:40:00Z",
+  "updated_at": "2026-10-20T09:29:41.753441+00:00",
   "active_open_prs": {
     "gangkor": [
       {
@@ -21,19 +21,13 @@
         "stack": "Python / Backend"
       },
       {
-        "repo": "relayhop/sn-monetization-runtime",
-        "pr": 1307,
-        "url": "https://github.com/relayhop/sn-monetization-runtime/pull/1307",
-        "stack": "Python / Backend"
+        "repo": "oll4com/spaceapp",
+        "pr": 224,
+        "url": "https://github.com/oll4com/spaceapp/pull/224",
+        "stack": "TypeScript / Temporal / Observability"
       }
     ],
     "Danko145": [
-      {
-        "repo": "oll4com/spaceapp",
-        "pr": 214,
-        "url": "https://github.com/oll4com/spaceapp/pull/214",
-        "stack": "TypeScript / UI"
-      },
       {
         "repo": "sharmiaalono/go-github",
         "pr": 39,
@@ -62,12 +56,6 @@
       }
     ],
     "danopef-eng": [
-      {
-        "repo": "nymrel/nymrel-swarm-studio",
-        "pr": 29,
-        "url": "https://github.com/nymrel/nymrel-swarm-studio/pull/29",
-        "stack": "Systems / Crypto"
-      },
       {
         "repo": "paraloom-labs/paraloom-prover-wasm",
         "pr": 11,
@@ -111,12 +99,10 @@
     "https://github.com/Senthemodder/aquarium-of-gullibles/pull/58"
   ],
   "danopef_claimed_repos": [
-    "nymrel/nymrel-swarm-studio",
     "paraloom-labs/paraloom-prover-wasm",
     "paraloom-labs/paraloom-core"
   ],
   "danopef_claimed_issues": [
-    "https://github.com/nymrel/nymrel-swarm-studio/pull/29",
     "https://github.com/paraloom-labs/paraloom-prover-wasm/pull/11",
     "https://github.com/paraloom-labs/paraloom-core/pull/1121"
   ],
