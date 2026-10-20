@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-20T10:21:43Z",
+  "updated_at": "2026-10-20T17:12:24Z",
   "active_open_prs": {
     "gangkor": [
       {
@@ -47,12 +47,6 @@
         "pr": 58,
         "url": "https://github.com/Senthemodder/aquarium-of-gullibles/pull/58",
         "stack": "Data Science / Research"
-      },
-      {
-        "repo": "FuRongJun-1999/dsh-memory",
-        "pr": 583,
-        "url": "https://github.com/FuRongJun-1999/dsh-memory/pull/583",
-        "stack": "AI / Testing / Regression"
       }
     ],
     "danopef-eng": [
@@ -117,9 +111,7 @@
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632"
   ],
-  "danko5443_rgb_claimed_repos": [
-    "FuRongJun-1999/dsh-memory"
-  ],
+  "danko5443_rgb_claimed_repos": [],
   "danko5443_rgb_claimed_issues": [
     "https://github.com/FuRongJun-1999/dsh-memory/issues/580"
   ]
