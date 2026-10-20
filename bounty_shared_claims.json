@@ -1,17 +1,11 @@
 {
-  "updated_at": "2026-10-20T09:29:41.753441+00:00",
+  "updated_at": "2026-10-20T10:21:43Z",
   "active_open_prs": {
     "gangkor": [
       {
         "repo": "MyZubster-Ecosystem/myzubster",
         "pr": 1636,
         "url": "https://github.com/MyZubster-Ecosystem/myzubster/pull/1636",
-        "stack": "Python / Backend"
-      },
-      {
-        "repo": "ZackaryShen/ColorYourModel",
-        "pr": 18,
-        "url": "https://github.com/ZackaryShen/ColorYourModel/pull/18",
         "stack": "Python / Backend"
       },
       {
@@ -84,7 +78,6 @@
   },
   "gangkor_claimed_repos": [
     "MyZubster-Ecosystem/myzubster",
-    "ZackaryShen/ColorYourModel",
     "zhangjiayang6835-cyber/bounty-plaza",
     "oll4com/spaceapp"
   ],
