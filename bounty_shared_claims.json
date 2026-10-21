@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-20T17:12:24Z",
+  "updated_at": "2026-10-21T05:49:42Z",
   "active_open_prs": {
     "gangkor": [
       {
@@ -61,12 +61,6 @@
         "pr": 1121,
         "url": "https://github.com/paraloom-labs/paraloom-core/pull/1121",
         "stack": "Rust / Systems / Crypto"
-      },
-      {
-        "repo": "NSPG13/agent-bounties",
-        "pr": 1666,
-        "url": "https://github.com/NSPG13/agent-bounties/pull/1666",
-        "stack": "Rust / Systems / Testing"
       }
     ]
   },
@@ -105,9 +99,7 @@
     "https://github.com/paraloom-labs/paraloom-prover-wasm/pull/11",
     "https://github.com/paraloom-labs/paraloom-core/pull/1121"
   ],
-  "danopef_eng_claimed_repos": [
-    "NSPG13/agent-bounties"
-  ],
+  "danopef_eng_claimed_repos": [],
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632"
   ],
