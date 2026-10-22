@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-21T05:49:42Z",
+  "updated_at": "2026-10-22T13:45:40Z",
   "active_open_prs": {
     "gangkor": [
       {
@@ -36,12 +36,6 @@
       }
     ],
     "danko5443-rgb": [
-      {
-        "repo": "zhangjiayang6835-cyber/ai-research",
-        "pr": 1548,
-        "url": "https://github.com/zhangjiayang6835-cyber/ai-research/pull/1548",
-        "stack": "AI / LLM / Scrapers"
-      },
       {
         "repo": "Senthemodder/aquarium-of-gullibles",
         "pr": 58,
