@@ -1,78 +1,19 @@
 {
-  "updated_at": "2026-10-22T13:45:40Z",
+  "updated_at": "2026-10-25T15:23:31Z",
   "active_open_prs": {
-    "gangkor": [
-      {
-        "repo": "MyZubster-Ecosystem/myzubster",
-        "pr": 1636,
-        "url": "https://github.com/MyZubster-Ecosystem/myzubster/pull/1636",
-        "stack": "Python / Backend"
-      },
-      {
-        "repo": "zhangjiayang6835-cyber/bounty-plaza",
-        "pr": 3096,
-        "url": "https://github.com/zhangjiayang6835-cyber/bounty-plaza/pull/3096",
-        "stack": "Python / Backend"
-      },
-      {
-        "repo": "oll4com/spaceapp",
-        "pr": 224,
-        "url": "https://github.com/oll4com/spaceapp/pull/224",
-        "stack": "TypeScript / Temporal / Observability"
-      }
-    ],
-    "Danko145": [
-      {
-        "repo": "sharmiaalono/go-github",
-        "pr": 39,
-        "url": "https://github.com/sharmiaalono/go-github/pull/39",
-        "stack": "Frontend / JS"
-      },
-      {
-        "repo": "Mantitup-Org/vista",
-        "pr": 208,
-        "url": "https://github.com/Mantitup-Org/vista/pull/208",
-        "stack": "TypeScript / React / UI"
-      }
-    ],
-    "danko5443-rgb": [
-      {
-        "repo": "Senthemodder/aquarium-of-gullibles",
-        "pr": 58,
-        "url": "https://github.com/Senthemodder/aquarium-of-gullibles/pull/58",
-        "stack": "Data Science / Research"
-      }
-    ],
-    "danopef-eng": [
-      {
-        "repo": "paraloom-labs/paraloom-prover-wasm",
-        "pr": 11,
-        "url": "https://github.com/paraloom-labs/paraloom-prover-wasm/pull/11",
-        "stack": "Rust / WASM / Crypto"
-      },
-      {
-        "repo": "paraloom-labs/paraloom-core",
-        "pr": 1121,
-        "url": "https://github.com/paraloom-labs/paraloom-core/pull/1121",
-        "stack": "Rust / Systems / Crypto"
-      }
-    ]
+    "gangkor": [],
+    "Danko145": [],
+    "danko5443-rgb": [],
+    "danopef-eng": []
   },
-  "gangkor_claimed_repos": [
-    "MyZubster-Ecosystem/myzubster",
-    "zhangjiayang6835-cyber/bounty-plaza",
-    "oll4com/spaceapp"
-  ],
+  "gangkor_claimed_repos": [],
   "gangkor_claimed_issues": [
     "https://github.com/MyZubster-Ecosystem/myzubster/pull/1636",
     "https://github.com/ZackaryShen/ColorYourModel/pull/18",
     "https://github.com/zhangjiayang6835-cyber/bounty-plaza/pull/3096",
     "https://github.com/oll4com/spaceapp/issues/61"
   ],
-  "danko145_claimed_repos": [
-    "sharmiaalono/go-github",
-    "Mantitup-Org/vista"
-  ],
+  "danko145_claimed_repos": [],
   "danko145_claimed_issues": [
     "https://github.com/sharmiaalono/go-github/pull/39",
     "https://github.com/Mantitup-Org/vista/pull/208"
