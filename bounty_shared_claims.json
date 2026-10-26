@@ -38,8 +38,11 @@
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632"
   ],
-  "danko5443_rgb_claimed_repos": [],
+  "danko5443_rgb_claimed_repos": [
+    "minerval-ai/minerval"
+  ],
   "danko5443_rgb_claimed_issues": [
-    "https://github.com/FuRongJun-1999/dsh-memory/issues/580"
+    "https://github.com/FuRongJun-1999/dsh-memory/issues/580",
+    "https://github.com/minerval-ai/minerval/issues/537"
   ]
 }
