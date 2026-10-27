@@ -41,12 +41,14 @@
   "danko5443_rgb_claimed_repos": [
     "minerval-ai/minerval",
     "dev-null-sh/dev-null.sh",
-    "hanzoai/agents"
+    "hanzoai/agents",
+    "aryan2621/antidote"
   ],
   "danko5443_rgb_claimed_issues": [
     "https://github.com/FuRongJun-1999/dsh-memory/issues/580",
     "https://github.com/minerval-ai/minerval/issues/537",
     "https://github.com/dev-null-sh/dev-null.sh/issues/1197",
-    "https://github.com/hanzoai/agents/issues/8"
+    "https://github.com/hanzoai/agents/issues/8",
+    "https://github.com/aryan2621/antidote/issues/362"
   ]
 }
