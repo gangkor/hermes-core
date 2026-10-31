@@ -47,7 +47,8 @@
     "hanzoai/agents",
     "aryan2621/antidote",
     "joeloverbeck/arkham-unfolded",
-    "LampaGJ/swu-mcp"
+    "LampaGJ/swu-mcp",
+    "civitai/civitai"
   ],
   "danko5443_rgb_claimed_issues": [
     "https://github.com/FuRongJun-1999/dsh-memory/issues/580",
@@ -56,6 +57,7 @@
     "https://github.com/hanzoai/agents/issues/8",
     "https://github.com/aryan2621/antidote/issues/362",
     "https://github.com/joeloverbeck/arkham-unfolded/issues/22",
-    "https://github.com/LampaGJ/swu-mcp/issues/124"
+    "https://github.com/LampaGJ/swu-mcp/issues/124",
+    "https://github.com/civitai/civitai/issues/7360"
   ]
 }
