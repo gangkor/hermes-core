@@ -40,11 +40,13 @@
     "https://github.com/paraloom-labs/paraloom-core/pull/1121"
   ],
   "danopef_eng_claimed_repos": [
-    "hanzoai/cli"
+    "hanzoai/cli",
+    "tari-project/universe"
   ],
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632",
-    "https://github.com/hanzoai/cli/issues/12"
+    "https://github.com/hanzoai/cli/issues/12",
+    "https://github.com/tari-project/universe/issues/3518"
   ],
   "danko5443_rgb_claimed_repos": [
     "minerval-ai/minerval",
