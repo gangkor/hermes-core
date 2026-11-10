@@ -41,12 +41,14 @@
   ],
   "danopef_eng_claimed_repos": [
     "hanzoai/cli",
-    "tari-project/universe"
+    "tari-project/universe",
+    "Conxian/conxius-enclave-sdk"
   ],
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632",
     "https://github.com/hanzoai/cli/issues/12",
-    "https://github.com/tari-project/universe/issues/3518"
+    "https://github.com/tari-project/universe/issues/3518",
+    "https://github.com/Conxian/conxius-enclave-sdk/issues/721"
   ],
   "danko5443_rgb_claimed_repos": [
     "minerval-ai/minerval",
