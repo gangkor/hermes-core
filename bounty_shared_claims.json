@@ -67,7 +67,8 @@
     "EnidAnderson/EvilSwarm",
     "gitmoot/gitmoot",
     "warden-protocol/wardenprotocol",
-    "hugoalves-dev/simkl-mcp-cloudflare-workers"
+    "hugoalves-dev/simkl-mcp-cloudflare-workers",
+    "telegraphprotocol/bounties"
   ],
   "danko5443_rgb_claimed_issues": [
     "https://github.com/FuRongJun-1999/dsh-memory/issues/580",
@@ -85,6 +86,7 @@
     "https://github.com/EnidAnderson/EvilSwarm/issues/63",
     "https://github.com/gitmoot/gitmoot/issues/2587",
     "https://github.com/warden-protocol/wardenprotocol/issues/1924",
-    "https://github.com/hugoalves-dev/simkl-mcp-cloudflare-workers/issues/81"
+    "https://github.com/hugoalves-dev/simkl-mcp-cloudflare-workers/issues/81",
+    "https://github.com/telegraphprotocol/bounties/issues/198"
   ]
 }
