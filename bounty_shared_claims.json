@@ -48,7 +48,8 @@
     "Conxian/conxius-enclave-sdk",
     "Conxian/conxian-gateway",
     "hanzoai/index",
-    "pratikacharya1234/agentcop"
+    "pratikacharya1234/agentcop",
+    "hanzoai/cloud"
   ],
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632",
@@ -57,7 +58,8 @@
     "https://github.com/Conxian/conxius-enclave-sdk/issues/721",
     "https://github.com/Conxian/conxian-gateway/issues/828",
     "https://github.com/hanzoai/index/issues/11",
-    "https://github.com/pratikacharya1234/agentcop/issues/1"
+    "https://github.com/pratikacharya1234/agentcop/issues/1",
+    "https://github.com/hanzoai/cloud/issues/20"
   ],
   "danko5443_rgb_claimed_repos": [
     "minerval-ai/minerval",
