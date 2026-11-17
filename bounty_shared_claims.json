@@ -51,7 +51,8 @@
     "pratikacharya1234/agentcop",
     "hanzoai/cloud",
     "hanzoai/vfs",
-    "hanzoai/graph"
+    "hanzoai/graph",
+    "hanzoai/ml"
   ],
   "danopef_eng_claimed_issues": [
     "https://github.com/NSPG13/agent-bounties/issues/1632",
@@ -63,7 +64,8 @@
     "https://github.com/pratikacharya1234/agentcop/issues/1",
     "https://github.com/hanzoai/cloud/issues/20",
     "https://github.com/hanzoai/vfs/issues/39",
-    "https://github.com/hanzoai/graph/issues/5"
+    "https://github.com/hanzoai/graph/issues/5",
+    "https://github.com/hanzoai/ml/issues/49"
   ],
   "danko5443_rgb_claimed_repos": [
     "minerval-ai/minerval",
